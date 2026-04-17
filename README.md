@@ -13,6 +13,40 @@ El objetivo de este proyecto es predecir los precios medios de las viviendas en 
 
 ---
 
+## Advertencia: Modelo NO incluido en el repositorio
+
+La carpeta `models/` está en el `.gitignore` y **los artefactos del modelo entrenado NO se suben a este repositorio**.
+
+### ¿Por qué?
+
+GitHub impone un **límite de 100 MB por archivo**. El modelo final (`models/model.pkl`) generado por este proyecto pesa aproximadamente **276 MB**, por lo que GitHub rechaza el push.
+
+### ¿Por qué pesa tanto el modelo?
+
+El modelo ganador es un **`RandomForestRegressor`** configurado en [`src/models/train_model.py`](src/models/train_model.py) con los siguientes hiperparámetros (obtenidos en la fase de experimentación):
+
+| Hiperparámetro | Valor | Impacto en tamaño |
+| :--- | :---: | :--- |
+| `n_estimators` | **200** | Se entrenan 200 árboles independientes; el peso total es ~200× el de un solo árbol. |
+| `max_depth` | **30** | Árboles muy profundos (hasta 2³⁰ hojas teóricas por árbol). |
+| `min_samples_leaf` | **1** | Cada hoja puede contener una sola muestra → máxima granularidad, más nodos. |
+| `max_features` | 6 | (No impacta tamaño, solo la varianza del ensemble.) |
+| `random_state` | 42 | (Reproducibilidad.) |
+
+La combinación de **muchos árboles (200)** + **árboles muy profundos (max_depth=30)** + **nodos mínimos (min_samples_leaf=1)** hace que cada árbol almacene muchísimos splits, resultando en un archivo serializado de ~276 MB.
+
+### ¿Cómo reproducir el modelo?
+
+El modelo se regenera ejecutando el script de entrenamiento:
+
+```bash
+python src/models/train_model.py
+```
+
+Esto entrenará el `RandomForestRegressor` sobre `data/interim/train_set.csv` y guardará `model.pkl` y `feature_columns.pkl` localmente en tu carpeta `models/`.
+
+---
+
 ## Instrucciones: Proyecto Final Fundamentos de DS
 
 Tu objetivo es completar el código faltante en los `notebooks/` y `src/` guiándote por las instrucciones (`docstrings`) dejadas en cada archivo.
