@@ -13,37 +13,32 @@ El objetivo de este proyecto es predecir los precios medios de las viviendas en 
 
 ---
 
-## Advertencia: Modelo NO incluido en el repositorio
+## Nota sobre la carpeta `models/`
 
-La carpeta `models/` está en el `.gitignore` y **los artefactos del modelo entrenado NO se suben a este repositorio**.
+Ojo, la carpeta `models/` la metí al `.gitignore`, o sea que el modelo entrenado (`model.pkl`) no está subido acá. Les cuento el porqué, porque me topé con esto y quiero dejarlo documentado:
 
-### ¿Por qué?
+Cuando hice el push, GitHub me lo rechazó porque `model.pkl` pesaba **276 MB** y el límite por archivo de GitHub es de **100 MB**. Así que tocó sacarlo del commit y dejarlo solo en local.
 
-GitHub impone un **límite de 100 MB por archivo**. El modelo final (`models/model.pkl`) generado por este proyecto pesa aproximadamente **276 MB**, por lo que GitHub rechaza el push.
+### ¿Y por qué pesa tanto?
 
-### ¿Por qué pesa tanto el modelo?
+Resulta que mi modelo ganador fue un `RandomForestRegressor` y en la experimentación los mejores hiperparámetros me salieron bastante "grandes". Esta es la configuración que uso en [`src/models/train_model.py`](src/models/train_model.py):
 
-El modelo ganador es un **`RandomForestRegressor`** configurado en [`src/models/train_model.py`](src/models/train_model.py) con los siguientes hiperparámetros (obtenidos en la fase de experimentación):
+- `n_estimators=200` → son 200 árboles entrenados, cada uno aporta su peso al `.pkl`.
+- `max_depth=30` → árboles bien profundos, con muchos splits internos.
+- `min_samples_leaf=1` → dejo que cada hoja llegue hasta una sola muestra, lo que genera todavía más nodos.
+- `max_features=6` y `random_state=42` → estos no influyen en el peso, más bien en la varianza y la reproducibilidad.
 
-| Hiperparámetro | Valor | Impacto en tamaño |
-| :--- | :---: | :--- |
-| `n_estimators` | **200** | Se entrenan 200 árboles independientes; el peso total es ~200× el de un solo árbol. |
-| `max_depth` | **30** | Árboles muy profundos (hasta 2³⁰ hojas teóricas por árbol). |
-| `min_samples_leaf` | **1** | Cada hoja puede contener una sola muestra → máxima granularidad, más nodos. |
-| `max_features` | 6 | (No impacta tamaño, solo la varianza del ensemble.) |
-| `random_state` | 42 | (Reproducibilidad.) |
+Entre 200 árboles muy profundos y hojas con una sola muestra, el `.pkl` termina en ~276 MB. Básicamente cada árbol se "aprende" muchísimos detalles del train y eso se guarda tal cual al serializar con `joblib`.
 
-La combinación de **muchos árboles (200)** + **árboles muy profundos (max_depth=30)** + **nodos mínimos (min_samples_leaf=1)** hace que cada árbol almacene muchísimos splits, resultando en un archivo serializado de ~276 MB.
+### ¿Cómo regenero el modelo?
 
-### ¿Cómo reproducir el modelo?
-
-El modelo se regenera ejecutando el script de entrenamiento:
+Como no está subido, si clonan el repo y quieren el `model.pkl`, solo hay que correr:
 
 ```bash
 python src/models/train_model.py
 ```
 
-Esto entrenará el `RandomForestRegressor` sobre `data/interim/train_set.csv` y guardará `model.pkl` y `feature_columns.pkl` localmente en tu carpeta `models/`.
+Eso toma `data/interim/train_set.csv`, entrena el Random Forest con la misma config y deja el `model.pkl` y el `feature_columns.pkl` dentro de `models/` en su máquina. De ahí la API (`src/api/main.py`) ya lo puede cargar sin problema.
 
 ---
 
