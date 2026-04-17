@@ -2,10 +2,16 @@
 API Básica usando FastAPI para servir el modelo entrenado.
 """
 
+import sys
+from pathlib import Path
 from fastapi import FastAPI
 from pydantic import BaseModel
 import joblib
 import pandas as pd
+
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from features.build_features import preprocess_pipeline
 
 # Inicializamos la app
 app = FastAPI(title="API de Predicción de Precios de Vivienda (California)", version="1.0")
@@ -23,19 +29,25 @@ class HousingFeatures(BaseModel):
     # Añade cualquier variable categórica o enriquecida que el modelo requiera
     # ej: ocean_proximity: str 
     # ej: rooms_per_household: float
+    ocean_proximity: str 
+
 
 # Variable global para cargar el modelo
 # IMPORTANTE: Asegúrate de guardar tu modelo en "models/best_model.pkl" o ajusta la ruta
 model = None
+feature_columns= None
+
 
 @app.on_event("startup")
 def load_model():
     """
     Carga el modelo globalmente al iniciar el servidor usando joblib.
     """
-    global model
+    global model, feature_columns
     try:
-        model = joblib.load("models/best_model.pkl")
+        model = joblib.load("models/model.pkl")
+        feature_columns= joblib.load("models/feature_columns.pkl")
+        print("Modelo cargado correctamente")
     except Exception as e:
         print("Advertencia: No se pudo cargar el modelo. ¿Ya lo entrenaste y guardaste?")
 
@@ -56,7 +68,18 @@ def predict_price(features: HousingFeatures):
         return {"error": "El modelo no se ha cargado."}
     
     # Tu código aquí para predecir
-    prediction = 0.0 # Reemplazar con model.predict()
+    # Convertimos el request en df
+    data = pd.DataFrame([features.model_dump()])
+
+    # Aplicamos el pipeline de features del train
+    data = preprocess_pipeline(data)
+
+    # Alineamos las columnas que el modelo espera
+    data = data.reindex(columns=feature_columns, fill_value=0)
+
+    # Predecimos
+    prediction = model.predict(data)[0]
+
     
     return {"predicted_price": prediction}
 

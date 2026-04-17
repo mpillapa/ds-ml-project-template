@@ -3,6 +3,7 @@ Módulo para limpieza y enriquecimiento (Feature Engineering) usando funciones s
 """
 
 import pandas as pd
+import numpy as np
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -12,6 +13,8 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     2. Retorna el DataFrame limpio.
     """
     # Tu código aquí
+    mediana = df["total_bedrooms"].median()
+    df["total_bedrooms"] = df["total_bedrooms"].fillna(mediana)
     return df
 
 def create_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -24,6 +27,24 @@ def create_features(df: pd.DataFrame) -> pd.DataFrame:
     2. Retorna el DataFrame enriquecido.
     """
     # Tu código aquí
+    df["rooms_per_household"]      = df["total_rooms"]    / df["households"]
+    df["bedrooms_per_room"]        = df["total_bedrooms"] / df["total_rooms"]
+    df["population_per_household"] = df["population"]     / df["households"]
+
+    # Distancia a San Francisco y Los Ángeles
+    SF_LAT, SF_LON = 37.77, -122.42
+    LA_LAT, LA_LON = 34.05, -118.24
+
+    df["dist_sf"] = np.sqrt(
+        (df["latitude"] - SF_LAT)**2 + (df["longitude"] - SF_LON)**2
+    )
+    df["dist_la"] = np.sqrt(
+        (df["latitude"] - LA_LAT)**2 + (df["longitude"] - LA_LON)**2
+    )
+
+    # Ingreso por cuarto disponible
+    df["income_per_room"] = df["median_income"] / df["rooms_per_household"]
+
     return df
 
 def preprocess_pipeline(df: pd.DataFrame) -> pd.DataFrame:
@@ -35,8 +56,8 @@ def preprocess_pipeline(df: pd.DataFrame) -> pd.DataFrame:
     
     # IMPORTANTE: Aquí los alumnos deberían añadir codificación de variables categóricas
     # (ej. get_dummies para 'ocean_proximity') si no usan Pipelines de Scikit-Learn.
-    
-    return df_featured
+    df_encoded  = pd.get_dummies(df_featured, columns=["ocean_proximity"])
+    return df_encoded
 
 if __name__ == "__main__":
     print("Módulo de feature engineering... (Falta el código!)")

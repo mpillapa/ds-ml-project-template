@@ -61,6 +61,6 @@ Este proyecto busca evaluar que puedas entablar un puente entre la teoría de la
 | **2. Limpieza y Feature Engineering** | Correcto manejo de imputaciones, codificación nominal/ordinal justificada, y creación de nuevas variables. Integración correcta en los scripts base (`src/features`). | **15 pts** |
 | **3. Experimentación y Selección de Modelos** | Prueba exhaustiva de modelos (SGD, Árboles, Regresión Lineal, Ensembles). Adecuada selección de hiperparámetros de validación cruzada. Análisis riguroso del Benchmark final. | **25 pts** |
 | **4. Despliegue Básico con FastAPI** | El modelo debe cargarse sin errores en la API, y recibir parámetros (`JSON`) respondiendo predicciones congruentes por medio del protocolo HTTP. | **15 pts** |
-| **5. Presentación del Proyecto** | Comunicación clara, entendimiento del caso de negocio frente a stakeholders. La manera cómo se transmiten los resultados, seguridad, elocuencia y conclusiones ejecutivas del equipo. | **30 pts** |
+| **5. Presentación del Proyecto** | Comunicación clara, entendimiento del caso de negocio frente a stakeholders. La manera cómo se transmiten los resultados, seguridad, elocuencia y conclusiones ejecutivas del equipo. | **30 pts** | 
 
 ¡Mucho éxito!
